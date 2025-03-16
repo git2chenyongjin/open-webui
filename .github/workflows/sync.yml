@@ -1,0 +1,48 @@
+name: Sync Fork
+
+on:
+  # 定时任务，每天凌晨 2 点执行
+  schedule:
+    - cron: '0 2 * * *'
+  # 也可以在手动触发时执行
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # 拉取所有历史记录，以便后续能正确合并
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          # 设置你的 GitHub 用户名
+          git config user.name "${{ github.actor }"
+          # 设置你的 GitHub 邮箱
+          git config user.email "chenyongjin2012@gmail.com"
+
+      - name: Add upstream repository
+        run: |
+          # 添加上游仓库地址，替换为你实际 fork 的原仓库地址
+          git remote add upstream https://github.com/open-webui/open-webui.git
+
+      - name: Fetch upstream
+        run: |
+          # 从上游仓库拉取最新的代码
+          git fetch upstream
+
+      - name: Merge upstream
+        run: |
+          # 切换到要同步的分支，这里假设是 main 分支，可按需修改
+          git checkout main
+          # 合并上游仓库的 main 分支到本地的 main 分支
+          git merge upstream/main
+
+      - name: Push changes
+        run: |
+          # 将合并后的代码推送到你的 fork 仓库
+          git push origin main
